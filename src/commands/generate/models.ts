@@ -1,4 +1,4 @@
-import { CSharpFileGenerator, JavaFileGenerator, JavaScriptFileGenerator, TypeScriptFileGenerator, GoFileGenerator, Logger, DartFileGenerator, PythonFileGenerator, RustFileGenerator, TS_COMMON_PRESET, TS_JSONBINPACK_PRESET, CSHARP_DEFAULT_PRESET, CSHARP_NEWTONSOFT_SERIALIZER_PRESET, CSHARP_COMMON_PRESET, CSHARP_JSON_SERIALIZER_PRESET, KotlinFileGenerator, TS_DESCRIPTION_PRESET, PhpFileGenerator, CplusplusFileGenerator, JAVA_CONSTRAINTS_PRESET, JAVA_JACKSON_PRESET, JAVA_COMMON_PRESET, JAVA_DESCRIPTION_PRESET } from '@asyncapi/modelina';
+import { CSharpFileGenerator, JavaFileGenerator, JavaScriptFileGenerator, TypeScriptFileGenerator, GoFileGenerator, Logger, DartFileGenerator, PythonFileGenerator, RustFileGenerator, TS_COMMON_PRESET, TS_JSONBINPACK_PRESET, CSHARP_DEFAULT_PRESET, CSHARP_NEWTONSOFT_SERIALIZER_PRESET, CSHARP_COMMON_PRESET, CSHARP_JSON_SERIALIZER_PRESET, KotlinFileGenerator, TS_DESCRIPTION_PRESET, PhpFileGenerator, CplusplusFileGenerator, JAVA_CONSTRAINTS_PRESET, JAVA_JACKSON_PRESET, JAVA_COMMON_PRESET, JAVA_DESCRIPTION_PRESET, PYTHON_PYDANTIC_PRESET } from '@asyncapi/modelina';
 import { Flags } from '@oclif/core';
 import { ConvertDocumentParserAPIVersion } from '@smoya/multi-parser';
 import Command from '../../base';
@@ -128,6 +128,15 @@ export default class Models extends Command {
     }),
 
     /**
+     * Python specific options
+     */
+    pythonPydantic: Flags.boolean({
+      description: 'Python specific, generate the models with pydantic',
+      required: false,
+      default: false
+    }),
+
+    /**
      * C# specific options
      */
     csharpAutoImplement: Flags.boolean({
@@ -168,7 +177,7 @@ export default class Models extends Command {
   /* eslint-disable sonarjs/cognitive-complexity */
   async run() {
     const { args, flags } = await this.parse(Models);
-    const { tsModelType, tsEnumType, tsIncludeComments, tsModuleSystem, tsExportType, tsJsonBinPack, tsMarshalling, tsExampleInstance, namespace, csharpAutoImplement, csharpArrayType, csharpNewtonsoft, csharpHashcode, csharpEqual, csharpSystemJson, packageName, javaIncludeComments, javaJackson, javaConstraints, output } = flags;
+    const { tsModelType, tsEnumType, tsIncludeComments, tsModuleSystem, tsExportType, tsJsonBinPack, tsMarshalling, tsExampleInstance, namespace, csharpAutoImplement, csharpArrayType, csharpNewtonsoft, csharpHashcode, csharpEqual, csharpSystemJson, packageName, javaIncludeComments, javaJackson, javaConstraints, output, pythonPydantic } = flags;
     const { language, file } = args;
     const inputFile = (await load(file)) || (await load());
     if (inputFile.isAsyncAPI3()) {
@@ -233,7 +242,14 @@ export default class Models extends Command {
       };
       break;
     case Languages.python:
-      fileGenerator = new PythonFileGenerator();
+      if (pythonPydantic) {
+        fileGenerator = new PythonFileGenerator({
+          presets: [PYTHON_PYDANTIC_PRESET]
+        });
+      }
+      else {
+        fileGenerator = new PythonFileGenerator();
+      }      
       break;
     case Languages.rust:
       fileGenerator = new RustFileGenerator();
